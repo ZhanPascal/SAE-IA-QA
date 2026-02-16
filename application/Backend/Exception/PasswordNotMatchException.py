@@ -1,2 +1,0 @@
-class PasswordNotMatchException(Exception):
-    pass

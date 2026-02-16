@@ -1,14 +1,16 @@
 application/application
+application/.cache
 
 application/Backend/__pycache__
-application/Backend/Controller/__pycache__
+application/Backend/Controllers/__pycache__
 application/Backend/Model/__pycache__
-application/Backend/Service/__pycache__
-application/Backend/Exception/__pycache__
+application/Backend/Services/__pycache__
+application/Backend/Exceptions/__pycache__
 
 application/Frontend/__pycache__
 application/Frontend/Ressources/__pycache__
-application/Frontend/Service/__pycache__
-application/Frontend/Exception/__pycache__
+application/Frontend/Services/__pycache__
+application/Frontend/Exceptions/__pycache__
+application/Frontend/views/__pycache__
 
 application/database.db

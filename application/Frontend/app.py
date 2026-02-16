@@ -1,8 +1,8 @@
 import streamlit as st
 
-from login import view_login
-from signup import view_signup
-from chatbot import view_chatbot
+from Views.login import view_login
+from Views.signup import view_signup
+from Views.chatbot import view_chatbot
 from Ressources.Session import initialize_session
 
 def main():

@@ -1,53 +1,63 @@
-from transformers import AutoTokenizer, AutoModelForQuestionAnswering
+import os
+
+os.environ['TRANSFORMERS_CACHE'] = '/code/.cache/'
+
+from transformers import pipeline
 import torch
+from googletrans import Translator
+
 
 class IA:
-    def __init__(self, cache_dir="./.cache"):
-        model_name = 'DracolIA/BERT-Context-based-QA'
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=cache_dir)
-        self.model = AutoModelForQuestionAnswering.from_pretrained(model_name, cache_dir=cache_dir)
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    
-    def generate_responses(self, question, file_content, have_file):
-        
+    def __init__(self, cache_dir="/code/.cache/"):
+
+        self.model_bert = pipeline("question-answering", model="DracolIA/BERT-Context-based-QA", cache_dir=cache_dir)
+
+        self.model_bigbird = pipeline("question-answering", model="DracolIA/BigBird-Roberta-Context-based-QA", cache_dir=cache_dir)
+
+        self.model_splinter = pipeline("question-answering", model="DracolIA/Splinter-Context-based-QA", cache_dir=cache_dir)
+
+        self.model_squeeze = pipeline("question-answering", model="DracolIA/SqueezeBert-Context-based-QA", cache_dir=cache_dir)
+
+
+    def generate_responses(self, question, file_content, have_file, selected_model):
+        print("file_content: ", file_content)
+        translator = Translator()
+        language = translator.detect(str(question)).lang.upper() # Verify the language of the prompt
+
         if have_file:
-            context = file_content
-        else:   
-            context = ""
-    
-        # Tokenize the input question and context
-        inputs = self.tokenizer.encode_plus(
-            question, context,
-            add_special_tokens=True,
-            return_tensors="pt",
-            truncation="only_second",  # Only truncate the context, not the question
-            max_length=512,
-            stride=128,
-            return_overflowing_tokens=True,
-            return_offsets_mapping=True,
-            padding="max_length"
-        )
+            context = str(file_content)
+        else:
+            context = str()
 
-        input_ids = inputs["input_ids"].to(self.device)
-        attention_mask = inputs["attention_mask"].to(self.device)
+        if selected_model.upper() == "BERT":
+            print("Choosen model: BERT")
+            model = self.model_bert
 
-        # Model inference
-        with torch.no_grad():
-            outputs = self.model(input_ids, attention_mask=attention_mask)
+        if selected_model.upper() == "BIGBIRD":
+            print("Choosen model: BIGBIRD")
+            model = self.model_bigbird
 
-        # Get the most likely beginning and end of answer with the argmax of the score
-        answer_start_scores = outputs.start_logits
-        answer_end_scores = outputs.end_logits
+        if selected_model.upper() == "ALBERT":
+            print("Choosen model: ALBERT")
+            model = self.model_albert
 
-        answer_start = torch.argmax(answer_start_scores, dim=-1)  # Get the index of the highest start score
-        answer_end = torch.argmax(answer_end_scores, dim=-1) + 1  # Get the index of the highest end score
+        if selected_model.upper() == "SPLINTER":
+            print("Choosen model: SPLINTER")
+            model = self.model_splinter
 
-        # Convert the token indexes to actual text of the answer
-        answer = self.tokenizer.decode(inputs['input_ids'][0][answer_start:answer_end], skip_special_tokens=True)
+        if selected_model.upper() == "SQUEEZE":
+            print("Choosen model: SQUEEZE")
+            model = self.model_squeeze
 
-        #print(input_ids)
-        print("Answer start : ", answer_start)
-        print("Answer end : " , answer_end)
-        print(self.tokenizer.decode(input_ids[0][answer_end:answer_start]))
-        return answer
 
+        if language != "EN":
+                question = translator.translate(str(question), src=language, dest="en").text # Translation of user text to english for the model
+        
+        answer = model(context = context, question = question)
+        if answer != "" or len(answer) != 0:
+            answer = answer["answer"]
+            if language != "EN":
+                answer = Translator().translate(str(answer), src="en", dest=language).text # Translation of model's te*xt to user's language
+                
+        print("====================> answer: ", answer)
+        return str(answer)

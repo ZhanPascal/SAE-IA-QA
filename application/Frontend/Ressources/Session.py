@@ -44,3 +44,14 @@ def initialize_session():
     if 'have_file' not in st.session_state:
         st.session_state['have_file'] = False
     
+    if 'model_selected' not in st.session_state:
+        st.session_state['model_selected'] = "Bert"
+
+    if 'model_selected_bln' not in st.session_state:
+        st.session_state['model_selected_bln'] = False
+
+    if 'languages' not in st.session_state:
+        st.session_state['languages'] = "en"
+
+    if 'is_chat_show' not in st.session_state:
+        st.session_state['is_chat_show'] = False
